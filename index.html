@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Horarios Pro - Control Mensual</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Month Selector / Dropdown -->
+        <header class="app-header">
+            <div class="header-top">
+                <div class="brand-group">
+                    <h1>NayTime</h1>
+                    <span class="brand-sub">by NayTools</span>
+                </div>
+                
+                <div class="month-selector-container">
+                    <button class="month-selector-btn" id="month-selector-btn">
+                        <span id="active-month-label">Cargando...</span>
+                        <span class="dropdown-arrow">▾</span>
+                    </button>
+                    <div class="month-dropdown" id="month-dropdown">
+                        <!-- Dynamic list of months -->
+                    </div>
+                </div>
+
+                <button class="btn-new-month" id="add-month-btn" title="Mes Siguiente">+ Mes</button>
+            </div>
+        </header>
+
+        <!-- Sticky Totals Bar -->
+        <div class="totals-bar" id="totals-bar">
+            <div class="total-item">
+                <span class="total-label">Total Horas</span>
+                <span class="total-val" id="grand-total-hours">0.0h</span>
+            </div>
+            <div class="total-item">
+                <span class="total-label">Días Activos</span>
+                <span class="total-val" id="total-days-count">0</span>
+            </div>
+            <!-- Botón de copiar último eliminado -->
+        </div>
+
+        <!-- Schedule List -->
+        <main class="schedule-list" id="schedule-list">
+            <!-- Row structure generated dynamically -->
+        </main>
+    </div>
+
+    <!-- Floating Action Button for adding a new day -->
+    <button class="fab" id="add-day-btn" title="Agregar día">+</button>
+
+    <!-- Modal Dial Selector: Servicio (Entrada & Salida) -->
+    <div class="modal-overlay" id="time-picker-modal">
+        <div class="picker-container">
+            <div class="picker-header">
+                <h3 id="time-picker-title">Editar Servicio</h3>
+                <span class="picker-subtitle">Ajusta las horas de entrada y salida</span>
+            </div>
+            
+            <div class="picker-tabs">
+                <button class="picker-tab-btn active" id="tab-entrada-btn" onclick="switchPickerTab('entrada')">Entrada</button>
+                <button class="picker-tab-btn" id="tab-salida-btn" onclick="switchPickerTab('salida')">Salida</button>
+            </div>
+
+            <!-- Entrada View -->
+            <div class="picker-view active" id="picker-view-entrada">
+                <div class="wheel-outer-container">
+                    <div class="wheel-highlight-bar"></div>
+                    <div class="wheel-container">
+                        <div class="wheel" id="wheel-in-hours"></div>
+                        <span class="wheel-separator">:</span>
+                        <div class="wheel" id="wheel-in-minutes"></div>
+                    </div>
+                </div>
+                <div class="quick-adjust-group">
+                    <button class="btn-adjust" onclick="adjustActiveTime(-30)">-30m</button>
+                    <button class="btn-adjust" onclick="adjustActiveTime(30)">+30m</button>
+                </div>
+            </div>
+
+            <!-- Salida View -->
+            <div class="picker-view" id="picker-view-salida">
+                <div class="wheel-outer-container">
+                    <div class="wheel-highlight-bar"></div>
+                    <div class="wheel-container">
+                        <div class="wheel" id="wheel-out-hours"></div>
+                        <span class="wheel-separator">:</span>
+                        <div class="wheel" id="wheel-out-minutes"></div>
+                    </div>
+                </div>
+                <div class="quick-adjust-group">
+                    <button class="btn-adjust" onclick="adjustActiveTime(-30)">-30m</button>
+                    <button class="btn-adjust" onclick="adjustActiveTime(30)">+30m</button>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="picker-actions">
+                <button class="btn btn-secondary" id="picker-undo-btn">Deshacer</button>
+                <button class="btn btn-cancel" onclick="closeTimePicker()">Cancelar</button>
+                <button class="btn btn-confirm" id="picker-confirm-btn">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dial Selector: Fecha / Día -->
+    <div class="modal-overlay" id="day-picker-modal">
+        <div class="picker-container">
+            <div class="picker-header">
+                <h3>Editar Fecha</h3>
+                <span class="picker-subtitle" id="day-picker-weekday-preview">Selecciona el día del mes</span>
+            </div>
+
+            <div class="wheel-outer-container">
+                <div class="wheel-highlight-bar"></div>
+                <div class="wheel-container">
+                    <div class="wheel" id="wheel-day-number" style="width: 120px;"></div>
+                </div>
+            </div>
+
+            <div class="picker-actions">
+                <button class="btn btn-cancel" onclick="closeDayPicker()">Cancelar</button>
+                <button class="btn btn-confirm" id="day-picker-confirm-btn">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
