@@ -277,13 +277,25 @@ function renderSchedule() {
             `);
         });
 
+        // Determine sub-label text
+        let subLabel = 'Editar fecha';
+        if (row.id === activeHighlightId) {
+            const rowDateVal = new Date(year, month - 1, row.date);
+            const todayDateVal = new Date(adjusted.year, adjusted.month - 1, adjusted.date);
+            if (rowDateVal.getTime() === todayDateVal.getTime()) {
+                subLabel = 'Hoy';
+            } else {
+                subLabel = 'Último';
+            }
+        }
+        
         const rowEl = document.createElement('div');
         rowEl.className = `schedule-row ${isHighlighted ? 'is-today' : ''}`;
         rowEl.setAttribute('data-id', row.id);
         rowEl.innerHTML = `
             <div class="day-column ${isPast ? 'is-past-day' : ''}" onclick="openDayPicker('${row.id}')">
                 <span class="day-label">${row.date} ${weekday.toUpperCase()}</span>
-                <span class="day-sub">${isHighlighted ? 'Hoy' : 'Editar fecha'}</span>
+                <span class="day-sub">${subLabel}</span>
             </div>
             <div class="services-container">
                 ${servicesHtml.join('')}

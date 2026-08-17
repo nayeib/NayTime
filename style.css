@@ -256,8 +256,9 @@ h1 {
 }
 
 .schedule-row.is-today {
-    border-left: 4px solid var(--accent-orange);
-    background-color: var(--highlight-today);
+    border-left: 5px solid var(--accent-orange);
+    background-color: rgba(255, 152, 0, 0.2) !important;
+    box-shadow: 0 0 15px rgba(255, 152, 0, 0.1);
 }
 
 .day-column {
@@ -270,6 +271,11 @@ h1 {
 
 .day-column:active {
     opacity: 0.7;
+}
+
+.day-column.is-past-day .day-label {
+    color: var(--accent-orange) !important;
+    opacity: 0.9;
 }
 
 .day-label {
@@ -739,10 +745,6 @@ h1 {
     font-size: 1.15rem !important;
 }
 
-.day-column.is-past-day .day-label {
-    color: var(--accent-orange) !important;
-}
-
 /* Signatures display */
 .print-signatures {
     display: none;
@@ -750,11 +752,16 @@ h1 {
 
 /* Print Styles */
 @media print {
+    @page {
+        margin: 0.5cm;
+        size: A4;
+    }
+
     body {
         background-color: #fff !important;
         color: #000 !important;
         padding: 0 !important;
-        font-size: 9pt !important;
+        font-size: 8pt !important;
     }
     
     .app-container {
@@ -769,58 +776,90 @@ h1 {
     .modal-overlay,
     .btn-add-service,
     .btn-delete-row,
-    .remove-service-btn {
+    .remove-service-btn,
+    .day-sub,
+    .row-actions button {
         display: none !important;
     }
 
     /* Compact schedule list for printing */
     .schedule-list {
-        gap: 2px !important;
+        gap: 0 !important;
+        border-top: 1px solid #000;
     }
 
     .schedule-row {
         background: #fff !important;
         color: #000 !important;
-        border: 1px solid #888 !important;
-        padding: 4px 8px !important;
-        margin-bottom: 2px !important;
+        border: none !important;
+        border-bottom: 1px solid #ccc !important;
+        padding: 2px 5px !important;
+        margin-bottom: 0 !important;
         border-radius: 0 !important;
         page-break-inside: avoid;
         box-shadow: none !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        height: 22px !important; /* Fixed height to ensure one line */
+        overflow: hidden;
+    }
+
+    .schedule-row.is-today {
+        border-left: none !important;
+        background-color: #f0f0f0 !important;
+        font-weight: bold;
     }
 
     .day-column {
-        min-width: 60px !important;
+        min-width: 50px !important;
+        flex: 0 0 50px !important;
     }
 
     .day-label {
         color: #000 !important;
-        font-size: 9pt !important;
+        font-size: 8pt !important;
+        font-weight: 600;
     }
     
-    .day-sub {
-        display: none !important;
+    .services-container {
+        padding: 0 5px !important;
+        gap: 4px !important;
+        flex-wrap: nowrap !important; /* Ensure single line */
+        overflow: hidden;
+    }
+
+    .service-badge {
+        background: transparent !important;
+        border: none !important;
+        color: #000 !important;
+        padding: 0 !important;
+        font-size: 8pt !important;
+        border-radius: 0 !important;
+        gap: 2px !important;
+    }
+
+    .service-badge span:last-child {
+        display: none !important; /* Hide the X button */
+    }
+
+    .row-actions {
+        min-width: 40px !important;
+        justify-content: flex-end !important;
     }
 
     .row-hours {
         color: #000 !important;
-        font-size: 9pt !important;
-    }
-
-    .service-badge {
-        background: #fff !important;
-        border: 1px solid #444 !important;
-        color: #000 !important;
-        padding: 2px 6px !important;
         font-size: 8pt !important;
-        border-radius: 4px !important;
+        font-weight: bold;
     }
 
     /* Print Signatures at bottom */
     .print-signatures {
         display: flex !important;
-        justify-content: space-around;
-        margin-top: 40px;
+        justify-content: space-between;
+        margin-top: 20px;
+        padding: 0 40px;
         page-break-inside: avoid;
     }
 
@@ -828,20 +867,20 @@ h1 {
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 160px;
+        width: 200px;
+        height: 40px;
     }
 
     .line-border {
-        border-top: 1px solid #000 !important;
+        border-top: 0.5pt solid #000 !important;
         width: 100% !important;
         height: 1px !important;
-        margin-bottom: 6px !important;
+        margin-top: 30px !important;
     }
 
     .signature-line span {
-        font-size: 8.5pt !important;
+        font-size: 8pt !important;
         color: #000 !important;
-        font-weight: 600;
+        font-weight: 500;
     }
 }
-
