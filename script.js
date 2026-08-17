@@ -314,8 +314,10 @@ function renderSchedule() {
     document.getElementById('completed-hours').innerText = `${formatMinutes(completedMinutes)}h`;
     document.getElementById('total-days-count').innerText = currentRows.length;
 
-    // Update Print totals
-    document.getElementById('print-grand-total').innerText = `${formatMinutes(grandTotalMinutes)}h`;
+    // Update Print totals and metadata
+    document.getElementById('print-total-value').innerText = `${formatMinutes(grandTotalMinutes)}h`;
+    const now = new Date();
+    document.getElementById('print-current-date').innerText = now.toLocaleDateString('es-ES');
 }
 
 // Check if a service has ended based on adjusted current time
@@ -365,13 +367,6 @@ function printMonth() {
         alert("Rango no válido.");
         return;
     }
-
-    // Set print header info
-    const now = new Date();
-    document.getElementById('print-current-date').innerText = now.toLocaleDateString();
-    
-    const [year, month] = appData.activeMonth.split('-');
-    document.getElementById('print-month-title').innerText = `CONTROL DE HORARIOS - ${fullMonthNames[parseInt(month) - 1]} ${year}`;
 
     const rows = document.querySelectorAll('.schedule-row');
     rows.forEach(row => {

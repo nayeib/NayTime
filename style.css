@@ -746,7 +746,7 @@ h1 {
 }
 
 /* Signatures display */
-.print-signatures, .print-only-header, .print-total-row {
+.print-signatures, .print-header, .print-total-row {
     display: none;
 }
 
@@ -769,40 +769,24 @@ h1 {
         padding: 0 !important;
     }
 
-    .no-print {
-        display: none !important;
-    }
-
     /* Print Header */
-    .print-only-header {
+    .print-header {
         display: block !important;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
     }
-
     .print-date-row {
         font-size: 8pt;
         text-align: right;
         margin-bottom: 5px;
     }
-
     .print-name-row {
         font-size: 10pt;
-        margin-bottom: 10px;
         font-weight: bold;
-    }
-
-    .print-month-title {
-        font-size: 12pt;
-        font-weight: bold;
-        text-align: center;
-        margin-top: 10px;
-        text-transform: uppercase;
-        border-bottom: 2px solid #000;
-        padding-bottom: 5px;
+        margin-bottom: 15px;
     }
 
     /* Hide UI controls */
-    .app-header > *:not(.print-only-header),
+    .app-header, 
     .totals-bar,
     .fab, 
     .modal-overlay,
@@ -814,18 +798,18 @@ h1 {
         display: none !important;
     }
 
-    /* Excel-style table */
+    /* Excel-like schedule list */
     .schedule-list {
-        gap: 0 !important;
-        border: 1.5pt solid #000 !important;
         display: block !important;
+        gap: 0 !important;
+        border: 1px solid #000 !important;
     }
 
     .schedule-row {
         background: #fff !important;
         color: #000 !important;
         border: none !important;
-        border-bottom: 0.5pt solid #000 !important;
+        border-bottom: 1px solid #000 !important;
         padding: 0 !important;
         margin-bottom: 0 !important;
         border-radius: 0 !important;
@@ -833,42 +817,43 @@ h1 {
         box-shadow: none !important;
         display: flex !important;
         flex-direction: row !important;
-        align-items: stretch !important;
-        height: 22px !important;
-        overflow: hidden;
+        align-items: center !important;
+        height: 24px !important;
     }
 
     .schedule-row:last-child {
         border-bottom: none !important;
     }
 
+    /* Remove highlighting in print */
     .schedule-row.is-today {
-        background-color: #fff !important; /* No highlight in print */
+        background-color: #fff !important;
+        border-left: none !important;
         font-weight: normal !important;
     }
 
     .day-column {
         min-width: 80px !important;
         flex: 0 0 80px !important;
-        border-right: 0.5pt solid #000 !important;
-        padding: 0 5px !important;
+        border-right: 1px solid #000 !important;
+        height: 100% !important;
         display: flex !important;
         align-items: center !important;
-        justify-content: center !important;
+        padding-left: 5px !important;
     }
 
     .day-label {
         color: #000 !important;
-        font-size: 8pt !important;
-        font-weight: 600;
+        font-size: 9pt !important;
+        font-weight: bold !important;
     }
     
     .services-container {
         padding: 0 10px !important;
         gap: 8px !important;
         flex-wrap: nowrap !important;
-        overflow: hidden;
-        border-right: 0.5pt solid #000 !important;
+        border-right: 1px solid #000 !important;
+        height: 100% !important;
         display: flex !important;
         align-items: center !important;
     }
@@ -878,9 +863,7 @@ h1 {
         border: none !important;
         color: #000 !important;
         padding: 0 !important;
-        font-size: 8pt !important;
-        border-radius: 0 !important;
-        gap: 0 !important;
+        font-size: 9pt !important;
     }
 
     .service-badge span:last-child {
@@ -891,35 +874,34 @@ h1 {
         min-width: 60px !important;
         flex: 0 0 60px !important;
         justify-content: center !important;
-        padding: 0 5px !important;
+        height: 100% !important;
         display: flex !important;
         align-items: center !important;
     }
 
     .row-hours {
         color: #000 !important;
-        font-size: 8pt !important;
+        font-size: 9pt !important;
         font-weight: bold;
     }
 
-    /* Print Footer Totals */
+    /* Print Total Row */
     .print-total-row {
         display: flex !important;
         justify-content: flex-end;
         align-items: center;
-        gap: 15px;
-        border: 1.5pt solid #000;
-        border-top: none;
-        padding: 5px 15px;
+        gap: 10px;
+        margin-top: 10px;
+        padding-right: 10px;
         font-weight: bold;
         font-size: 10pt;
     }
 
-    /* Print Signatures at bottom */
+    /* Print Signatures */
     .print-signatures {
         display: flex !important;
         justify-content: space-between;
-        margin-top: 40px;
+        margin-top: 50px;
         padding: 0 40px;
         page-break-inside: avoid;
     }
@@ -929,13 +911,19 @@ h1 {
         flex-direction: column;
         align-items: center;
         width: 200px;
-        height: 60px;
+        height: 40px;
     }
 
     .line-border {
-        border-top: 1pt solid #000 !important;
+        border-top: 0.5pt solid #000 !important;
         width: 100% !important;
         height: 1px !important;
-        margin-top: 50px !important;
+        margin-top: 30px !important;
+    }
+
+    .signature-line span {
+        font-size: 8pt !important;
+        color: #000 !important;
+        font-weight: 500;
     }
 }
