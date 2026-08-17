@@ -47,6 +47,22 @@ window.addEventListener('DOMContentLoaded', () => {
     scrollToTodayOrClosest();
 });
 
+// Get Adjusted Today with 5-hour margin (if before 5 AM, it is still yesterday)
+function getAdjustedToday() {
+    const now = new Date();
+    if (now.getHours() < 5) {
+        now.setDate(now.getDate() - 1);
+    }
+    return {
+        date: now.getDate(),
+        monthStr: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        hours: now.getHours(),
+        minutes: now.getMinutes()
+    };
+}
+
 // Load / Save Data
 function loadData() {
     const saved = localStorage.getItem('horarios_pro_data');
@@ -65,7 +81,7 @@ function loadData() {
         const month = String(now.getMonth() + 1).padStart(2, '0');
         appData.activeMonth = `${year}-${month}`;
         
-        // If active month doesn't exist, create it with default values
+        // If active month doesn't exist, create it EMPTY
         if (!appData.months[appData.activeMonth]) {
             generateDefaultMonth(appData.activeMonth);
         }
@@ -76,30 +92,9 @@ function saveLocalStorage() {
     localStorage.setItem('horarios_pro_data', JSON.stringify(appData));
 }
 
-// Generate Default Month based on template
+// Generate Default Month - Now returns EMPTY as requested
 function generateDefaultMonth(monthKey) {
-    const [year, month] = monthKey.split('-').map(Number);
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const rows = [];
-
-    // Let's populate some initial days (e.g. from current date - 7 days to +7 days, or first few days)
-    // To avoid cluttering but show content, let's prefill days 17 to 23 of August 2026 as example:
-    const daysToPrefill = [18, 19, 20, 21, 22, 23];
-    daysToPrefill.forEach((d, idx) => {
-        const dateObj = new Date(year, month - 1, d);
-        const dayOfWeek = dateObj.getDay();
-        
-        // Clone default services
-        const services = JSON.parse(JSON.stringify(defaultServicesByDay[dayOfWeek]));
-        
-        rows.push({
-            id: generateId(),
-            date: d,
-            services: services
-        });
-    });
-
-    appData.months[monthKey] = rows;
+    appData.months[monthKey] = [];
     saveLocalStorage();
 }
 
@@ -115,7 +110,6 @@ function getWeekdayName(year, month, date) {
 
 // DOM Events binding
 function initDOMEvents() {
-    document.getElementById('add-month-btn').addEventListener('click', createNewMonth);
     document.getElementById('add-day-btn').addEventListener('click', addNewDay);
     
     // Month Dropdown Toggle logic
@@ -127,11 +121,32 @@ function initDOMEvents() {
         selectorBtn.parentElement.classList.toggle('active');
     });
 
+    // Options Menu Toggle logic
+    const menuBtn = document.getElementById('menu-btn');
+    const menuDropdown = document.getElementById('menu-dropdown');
+    menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menuDropdown.classList.toggle('active');
+    });
+
     document.addEventListener('click', (e) => {
         if (!selectorBtn.contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.classList.remove('active');
             selectorBtn.parentElement.classList.remove('active');
         }
+        if (!menuBtn.contains(e.target) && !menuDropdown.contains(e.target)) {
+            menuDropdown.classList.remove('active');
+        }
+    });
+
+    document.getElementById('add-month-menu-btn').addEventListener('click', () => {
+        menuDropdown.classList.remove('active');
+        createNewMonth();
+    });
+
+    document.getElementById('print-month-menu-btn').addEventListener('click', () => {
+        menuDropdown.classList.remove('active');
+        printMonth();
     });
 
     // Day Picker Confirm Action
@@ -195,10 +210,11 @@ function renderSchedule() {
     currentRows.sort((a, b) => a.date - b.date);
 
     let grandTotalMinutes = 0;
-    const now = new Date();
-    const todayDate = now.getDate();
-    const todayMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const isCurrentMonth = todayMonthStr === appData.activeMonth;
+    let completedMinutes = 0;
+    
+    const adjusted = getAdjustedToday();
+    const todayDate = adjusted.date;
+    const isCurrentMonth = adjusted.monthStr === appData.activeMonth;
 
     currentRows.forEach(row => {
         const [year, month] = appData.activeMonth.split('-').map(Number);
@@ -212,6 +228,10 @@ function renderSchedule() {
             const mins = calculateServiceMinutes(srv.start, srv.end);
             rowMinutes += mins;
             grandTotalMinutes += mins;
+            
+            if (isServiceCompleted(row.date, srv)) {
+                completedMinutes += mins;
+            }
             
             servicesHtml.push(`
                 <span class="service-badge" onclick="openTimePicker('${row.id}', ${index})">
@@ -243,7 +263,73 @@ function renderSchedule() {
 
     // Update Sticky totals
     document.getElementById('grand-total-hours').innerText = `${formatMinutes(grandTotalMinutes)}h`;
+    document.getElementById('completed-hours').innerText = `${formatMinutes(completedMinutes)}h`;
     document.getElementById('total-days-count').innerText = currentRows.length;
+}
+
+// Check if a service has ended based on adjusted current time
+function isServiceCompleted(rowDate, srv) {
+    const adjusted = getAdjustedToday();
+    
+    // If we're looking at a past month, all services are completed
+    const [actYear, actMonth] = appData.activeMonth.split('-').map(Number);
+    const actDateVal = new Date(actYear, actMonth - 1, rowDate);
+    const todayDateVal = new Date(adjusted.year, adjusted.month - 1, adjusted.date);
+    
+    if (actDateVal < todayDateVal) return true;
+    if (actDateVal > todayDateVal) return false;
+    
+    // If it is today:
+    const currentMin = adjusted.hours * 60 + adjusted.minutes;
+    
+    let [startH, startM] = srv.start.split(':').map(Number);
+    let [endH, endM] = srv.end.split(':').map(Number);
+    
+    let startMin = startH * 60 + startM;
+    let endMin = endH * 60 + endM;
+    
+    // Midnight overlap adjustments (e.g. 19:00 to 02:00)
+    if (endMin < startMin) {
+        endMin += 24 * 60;
+    }
+    
+    let currentMinAdjusted = currentMin;
+    if (adjusted.hours < 5) {
+        currentMinAdjusted += 24 * 60;
+    }
+    
+    return currentMinAdjusted >= endMin;
+}
+
+// Print ranges within the active month
+function printMonth() {
+    const fromDay = prompt("Imprimir desde el día (ej: 1):", "1");
+    if (fromDay === null) return;
+    const toDay = prompt("Imprimir hasta el día (ej: 31):", "31");
+    if (toDay === null) return;
+    
+    const from = parseInt(fromDay);
+    const to = parseInt(toDay);
+    if (isNaN(from) || isNaN(to)) {
+        alert("Rango no válido.");
+        return;
+    }
+
+    const rows = document.querySelectorAll('.schedule-row');
+    rows.forEach(row => {
+        const labelText = row.querySelector('.day-label').innerText;
+        const dayNum = parseInt(labelText.split(' ')[0]);
+        if (dayNum < from || dayNum > to) {
+            row.classList.add('print-hidden');
+        } else {
+            row.classList.remove('print-hidden');
+        }
+    });
+
+    window.print();
+
+    // Reset layout after printing
+    rows.forEach(row => row.classList.remove('print-hidden'));
 }
 
 function scrollToTodayOrClosest() {
@@ -353,6 +439,18 @@ function addNewDay() {
         const sortedRows = [...currentRows].sort((a, b) => a.date - b.date);
         const lastRow = sortedRows[sortedRows.length - 1];
         newServices = JSON.parse(JSON.stringify(lastRow.services));
+    } else {
+        // Default to today's adjusted date if active month matches today, otherwise 1st
+        const adjusted = getAdjustedToday();
+        const [year, month] = appData.activeMonth.split('-').map(Number);
+        
+        if (adjusted.year === year && adjusted.month === month) {
+            newDate = adjusted.date;
+        } else {
+            newDate = 1;
+        }
+        // Default empty work service: 09:00 - 17:00
+        newServices = [{ start: "09:00", end: "17:00" }];
     }
 
     // Verify limit of days in month
@@ -365,7 +463,7 @@ function addNewDay() {
     const newRow = {
         id: generateId(),
         date: newDate,
-        services: newServices.length > 0 ? newServices : [{ start: "12:00", end: "16:00" }]
+        services: newServices
     };
 
     currentRows.push(newRow);
@@ -417,12 +515,15 @@ function deleteService(event, rowId, index) {
     renderSchedule();
 }
 
-// Custom Wheel/Drum UI Picker logic
-function populateWheelElements(elementId, min, max, pad = true) {
+// Custom Wheel/Drum UI Picker logic with optional infinite loop support
+function populateWheelElements(elementId, min, max, pad = true, loop = false) {
     const wheel = document.getElementById(elementId);
     wheel.innerHTML = '';
     
-    // Add empty space elements at top and bottom for smooth centering/alignment
+    const groupSize = max - min + 1;
+    wheel.dataset.groupSize = String(groupSize);
+    wheel.dataset.loop = String(loop);
+    
     const padItem = () => {
         const item = document.createElement('div');
         item.className = 'wheel-item';
@@ -434,37 +535,65 @@ function populateWheelElements(elementId, min, max, pad = true) {
     wheel.appendChild(padItem());
     wheel.appendChild(padItem());
 
-    for (let i = min; i <= max; i++) {
-        const item = document.createElement('div');
-        item.className = 'wheel-item';
-        const displayVal = pad ? String(i).padStart(2, '0') : String(i);
-        item.innerText = displayVal;
-        item.setAttribute('data-val', displayVal);
-        wheel.appendChild(item);
+    const repeats = loop ? 5 : 1;
+    for (let r = 0; r < repeats; r++) {
+        for (let i = min; i <= max; i++) {
+            const item = document.createElement('div');
+            item.className = 'wheel-item';
+            const displayVal = pad ? String(i).padStart(2, '0') : String(i);
+            item.innerText = displayVal;
+            item.setAttribute('data-val', displayVal);
+            wheel.appendChild(item);
+        }
     }
 
     // Two empty padding items at bottom
     wheel.appendChild(padItem());
     wheel.appendChild(padItem());
     
-    // Scroll listener for detecting selection
+    // Scroll listener for detecting selection and handling boundaries
     wheel.addEventListener('scroll', () => {
+        handleWheelLoop(wheel);
+        
         clearTimeout(wheel.scrollTimeout);
         wheel.scrollTimeout = setTimeout(() => {
             updateWheelSelection(wheel);
-        }, 100);
+        }, 80);
     });
+}
+
+function handleWheelLoop(wheel) {
+    const loop = wheel.dataset.loop === 'true';
+    const groupSize = parseInt(wheel.dataset.groupSize || 0);
+    if (!loop || groupSize <= 0) return;
+    
+    const scrollTop = wheel.scrollTop;
+    const itemHeight = 46;
+    const groupHeight = groupSize * itemHeight;
+    const totalHeight = wheel.scrollHeight;
+    const clientHeight = wheel.clientHeight;
+    
+    const upperThreshold = groupHeight * 1.5;
+    const lowerThreshold = totalHeight - clientHeight - groupHeight * 1.5;
+    
+    if (scrollTop < upperThreshold) {
+        wheel.scrollTop = scrollTop + groupHeight;
+    } else if (scrollTop > lowerThreshold) {
+        wheel.scrollTop = scrollTop - groupHeight;
+    }
 }
 
 function updateWheelSelection(wheel) {
     const items = wheel.querySelectorAll('.wheel-item:not([style*="pointer-events"])');
+    const allItems = wheel.querySelectorAll('.wheel-item');
     const containerRect = wheel.getBoundingClientRect();
     const centerLine = containerRect.top + containerRect.height / 2;
 
     let closestItem = null;
     let minDiff = Infinity;
 
-    items.forEach(item => {
+    allItems.forEach(item => {
+        if (item.style.pointerEvents === 'none') return;
         const rect = item.getBoundingClientRect();
         const itemCenter = rect.top + rect.height / 2;
         const diff = Math.abs(centerLine - itemCenter);
@@ -475,7 +604,7 @@ function updateWheelSelection(wheel) {
     });
 
     if (closestItem) {
-        items.forEach(i => i.classList.remove('selected'));
+        allItems.forEach(i => i.classList.remove('selected'));
         closestItem.classList.add('selected');
         
         // Trigger event
@@ -492,21 +621,24 @@ function updateWheelSelection(wheel) {
 
 function setWheelValue(elementId, value) {
     const wheel = document.getElementById(elementId);
-    const items = wheel.querySelectorAll('.wheel-item');
+    const allItems = wheel.querySelectorAll('.wheel-item');
     const targetVal = String(value).padStart(2, '0');
     
-    let targetIndex = -1;
-    let count = 0;
-    
-    items.forEach((item, index) => {
-        if (item.getAttribute('data-val') === targetVal) {
-            targetIndex = index;
+    const matchingIndices = [];
+    allItems.forEach((item, index) => {
+        if (item.getAttribute('data-val') === targetVal && !item.style.pointerEvents) {
+            matchingIndices.push(index);
         }
     });
     
+    let targetIndex = -1;
+    if (matchingIndices.length > 0) {
+        // Pick the index closest to the middle of the matching indices
+        const mid = Math.floor(matchingIndices.length / 2);
+        targetIndex = matchingIndices[mid];
+    }
+    
     if (targetIndex !== -1) {
-        // Height of each item is 46px
-        // We calculate scroll position to center the targetIndex item:
         const wheelHeight = wheel.clientHeight || 180;
         const scrollPosition = (targetIndex * 46 + 23) - (wheelHeight / 2);
         
@@ -515,8 +647,8 @@ function setWheelValue(elementId, value) {
             behavior: 'instant'
         });
         
-        items.forEach(i => i.classList.remove('selected'));
-        items[targetIndex].classList.add('selected');
+        allItems.forEach(i => i.classList.remove('selected'));
+        allItems[targetIndex].classList.add('selected');
     }
 }
 
@@ -616,11 +748,11 @@ function openTimePicker(rowId, serviceIndex) {
         currentEnd: srv.end
     };
 
-    // Populate Time wheels (0-24 hours and 0-59 minutes)
-    populateWheelElements('wheel-in-hours', 0, 24, true);
-    populateWheelElements('wheel-in-minutes', 0, 59, true);
-    populateWheelElements('wheel-out-hours', 0, 24, true);
-    populateWheelElements('wheel-out-minutes', 0, 59, true);
+    // Populate Time wheels (0-23 hours and 0-59 minutes) with loop enabled
+    populateWheelElements('wheel-in-hours', 0, 23, true, true);
+    populateWheelElements('wheel-in-minutes', 0, 59, true, true);
+    populateWheelElements('wheel-out-hours', 0, 23, true, true);
+    populateWheelElements('wheel-out-minutes', 0, 59, true, true);
 
     // Open Modal and display tab
     switchPickerTab('entrada');

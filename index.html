@@ -30,21 +30,30 @@
                     </div>
                 </div>
 
-                <button class="btn-new-month" id="add-month-btn" title="Mes Siguiente">+ Mes</button>
+                <div class="menu-container">
+                    <button class="menu-btn" id="menu-btn" title="Opciones">⋮</button>
+                    <div class="menu-dropdown" id="menu-dropdown">
+                        <button class="menu-item-btn" id="add-month-menu-btn">Agregar Mes</button>
+                        <button class="menu-item-btn" id="print-month-menu-btn">Imprimir Mes</button>
+                    </div>
+                </div>
             </div>
         </header>
 
         <!-- Sticky Totals Bar -->
         <div class="totals-bar" id="totals-bar">
             <div class="total-item">
-                <span class="total-label">Total Horas</span>
-                <span class="total-val" id="grand-total-hours">0.0h</span>
+                <span class="total-label">Horas Completadas</span>
+                <span class="total-val orange-text" id="completed-hours">0.0h</span>
             </div>
             <div class="total-item">
-                <span class="total-label">Días Activos</span>
-                <span class="total-val" id="total-days-count">0</span>
+                <span class="total-label">Total Cargadas</span>
+                <span class="total-val text-small" id="grand-total-hours">0.0h</span>
             </div>
-            <!-- Botón de copiar último eliminado -->
+            <div class="total-item">
+                <span class="total-label">Días</span>
+                <span class="total-val text-small" id="total-days-count">0</span>
+            </div>
         </div>
 
         <!-- Schedule List -->
