@@ -199,6 +199,38 @@ function renderTabs() {
     });
 }
 
+// Find the row that should be highlighted as the active or most recent worked day
+function findActiveHighlightRowId(currentRows, adjusted) {
+    // Only highlight rows that have at least one service
+    const rowsWithServices = currentRows.filter(r => r.services && r.services.length > 0);
+    if (rowsWithServices.length === 0) return null;
+    
+    const [year, month] = appData.activeMonth.split('-').map(Number);
+    const todayDateVal = new Date(adjusted.year, adjusted.month - 1, adjusted.date);
+    
+    // Look for exact match today
+    const todayRow = rowsWithServices.find(r => {
+        const dVal = new Date(year, month - 1, r.date);
+        return dVal.getTime() === todayDateVal.getTime();
+    });
+    if (todayRow) return todayRow.id;
+    
+    // Look for closest in the past
+    let closestRow = null;
+    let closestDiff = -Infinity;
+    
+    rowsWithServices.forEach(r => {
+        const dVal = new Date(year, month - 1, r.date);
+        const diff = dVal - todayDateVal; // Negative if in the past
+        if (diff < 0 && diff > closestDiff) {
+            closestDiff = diff;
+            closestRow = r;
+        }
+    });
+    
+    return closestRow ? closestRow.id : null;
+}
+
 // Render Schedule List
 function renderSchedule() {
     const container = document.getElementById('schedule-list');
@@ -213,13 +245,17 @@ function renderSchedule() {
     let completedMinutes = 0;
     
     const adjusted = getAdjustedToday();
-    const todayDate = adjusted.date;
-    const isCurrentMonth = adjusted.monthStr === appData.activeMonth;
+    const activeHighlightId = findActiveHighlightRowId(currentRows, adjusted);
 
     currentRows.forEach(row => {
         const [year, month] = appData.activeMonth.split('-').map(Number);
         const weekday = getWeekdayName(year, month, row.date);
-        const isToday = isCurrentMonth && row.date === todayDate;
+        const isHighlighted = row.id === activeHighlightId;
+        
+        // Calculate if this date is in the past
+        const rowDateVal = new Date(year, month - 1, row.date);
+        const todayDateVal = new Date(adjusted.year, adjusted.month - 1, adjusted.date);
+        const isPast = rowDateVal < todayDateVal;
         
         let rowMinutes = 0;
         const servicesHtml = [];
@@ -242,12 +278,12 @@ function renderSchedule() {
         });
 
         const rowEl = document.createElement('div');
-        rowEl.className = `schedule-row ${isToday ? 'is-today' : ''}`;
+        rowEl.className = `schedule-row ${isHighlighted ? 'is-today' : ''}`;
         rowEl.setAttribute('data-id', row.id);
         rowEl.innerHTML = `
-            <div class="day-column" onclick="openDayPicker('${row.id}')">
+            <div class="day-column ${isPast ? 'is-past-day' : ''}" onclick="openDayPicker('${row.id}')">
                 <span class="day-label">${row.date} ${weekday.toUpperCase()}</span>
-                <span class="day-sub">${isToday ? 'Hoy' : 'Editar fecha'}</span>
+                <span class="day-sub">${isHighlighted ? 'Hoy' : 'Editar fecha'}</span>
             </div>
             <div class="services-container">
                 ${servicesHtml.join('')}
@@ -336,35 +372,19 @@ function scrollToTodayOrClosest() {
     const currentRows = appData.months[appData.activeMonth] || [];
     if (currentRows.length === 0) return;
 
-    const now = new Date();
-    const todayDate = now.getDate();
-    const todayMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    
-    // Only scroll if activeMonth matches current calendar month
-    if (todayMonthStr !== appData.activeMonth) return;
+    const adjusted = getAdjustedToday();
+    const activeHighlightId = findActiveHighlightRowId(currentRows, adjusted);
 
-    const sorted = [...currentRows].sort((a, b) => a.date - b.date);
-    let targetRow = null;
-    let closestDiff = -Infinity;
-
-    sorted.forEach(row => {
-        const diff = row.date - todayDate;
-        if (diff === 0) {
-            targetRow = row;
-        } else if (diff < 0 && diff > closestDiff) {
-            closestDiff = diff;
-            targetRow = row;
-        }
-    });
-
-    // Fallback: If no today and no past dates, select the first date
-    if (!targetRow && sorted.length > 0) {
-        targetRow = sorted[0];
+    let targetId = activeHighlightId;
+    if (!targetId) {
+        // Fallback to first row
+        const sorted = [...currentRows].sort((a, b) => a.date - b.date);
+        targetId = sorted[0].id;
     }
 
-    if (targetRow) {
+    if (targetId) {
         setTimeout(() => {
-            const el = document.querySelector(`[data-id="${targetRow.id}"]`);
+            const el = document.querySelector(`[data-id="${targetId}"]`);
             if (el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
