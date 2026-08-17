@@ -14,7 +14,12 @@
     <div class="app-container">
         <!-- Month Selector / Dropdown -->
         <header class="app-header">
-            <div class="header-top">
+            <div class="print-only-header">
+                <div class="print-date-row">Fecha de impresión: <span id="print-current-date"></span></div>
+                <div class="print-name-row">Nombre: ________________________________________________</div>
+                <div class="print-month-title" id="print-month-title"></div>
+            </div>
+            <div class="header-top no-print">
                 <div class="brand-group">
                     <h1>NayTime</h1>
                     <span class="brand-sub">by NayTools</span>
@@ -60,6 +65,12 @@
         <main class="schedule-list" id="schedule-list">
             <!-- Row structure generated dynamically -->
         </main>
+
+        <!-- Print Footer Totals -->
+        <div class="print-total-row">
+            <span>TOTAL DE HORAS:</span>
+            <span id="print-grand-total">0.0h</span>
+        </div>
 
         <!-- Signatures (Print Only) -->
         <div class="print-signatures" id="print-signatures">
