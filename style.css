@@ -17,6 +17,13 @@
     --font-body: 'Outfit', sans-serif;
 }
 
+/* Ocultar elementos de impresión en la UI principal */
+.print-signatures, 
+.print-header, 
+.print-total-row {
+    display: none !important;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -743,11 +750,6 @@ h1 {
 
 .text-small {
     font-size: 1.15rem !important;
-}
-
-/* Signatures display */
-.print-signatures, .print-header, .print-total-row {
-    display: none;
 }
 
 /* Print Styles */

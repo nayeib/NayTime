@@ -382,7 +382,9 @@ function printMonth() {
     window.print();
 
     // Reset layout after printing
-    rows.forEach(row => row.classList.remove('print-hidden'));
+    setTimeout(() => {
+        rows.forEach(row => row.classList.remove('print-hidden'));
+    }, 500);
 }
 
 function scrollToTodayOrClosest() {
