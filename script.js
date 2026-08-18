@@ -278,7 +278,7 @@ function renderSchedule() {
         });
 
         // Determine sub-label text
-        let subLabel = 'Editar fecha';
+        let subLabel = '▲';
         if (row.id === activeHighlightId) {
             const rowDateVal = new Date(year, month - 1, row.date);
             const todayDateVal = new Date(adjusted.year, adjusted.month - 1, adjusted.date);

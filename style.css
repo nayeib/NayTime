@@ -295,6 +295,7 @@ h1 {
 .day-sub {
     font-size: 0.75rem;
     color: var(--text-muted);
+    align-self: center; /* Alinea este elemento al centro dentro de un contenedor flex vertical */
 }
 
 /* Services Container */
